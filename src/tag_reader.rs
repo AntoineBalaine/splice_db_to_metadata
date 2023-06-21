@@ -1,29 +1,54 @@
-use lofty::Probe;
-
-use lofty::{Accessor, TaggedFileExt};
+use lofty::{AudioFile, ParseOptions, TagType};
+use std::fs::File;
+use std::io;
+use std::io::ErrorKind;
 use std::path::Path;
 
 pub(crate) fn tag_reader() {
+    let mut file_content = read_file().unwrap();
+    // put the file in a variable
+    // if it fails to open, print an error
+    // if it succeeds, put the file in a variable
+
+    let tagged_file = lofty::iff::wav::WavFile::read_from(&mut file_content, ParseOptions::new())
+        .expect("ERROR: Bad path provided!");
+    if tagged_file.contains_tag_type(TagType::Id3v2) {
+        let id3_tag = tagged_file.id3v2().unwrap();
+        println!("ID3v2");
+        id3_tag.into_iter().for_each(|frame| {
+            println!("{}: {:?}", frame.id_str(), id3_tag.get_text(frame.id_str()));
+        });
+    }
+
+    if tagged_file.contains_tag_type(TagType::RiffInfo) {
+        let riff_info = tagged_file.riff_info().unwrap();
+
+        println!("RIFF INFO");
+        riff_info.into_iter().for_each(|frame| {
+            let (first, second) = frame;
+            println!("{}: {:?}", first, second);
+        });
+    }
+}
+
+pub(crate) fn read_file() -> Result<File, io::Error> {
     let path_str = std::env::args().nth(1).expect("ERROR: No path specified!");
     let path = Path::new(&path_str);
 
     if !path.is_file() {
-        panic!("ERROR: Path is not a file!");
+        return Err(io::Error::new(ErrorKind::NotFound, "Custom error message"));
     }
+    File::open(path)
+}
 
-    let tagged_file = Probe::open(path)
-        .expect("ERROR: Bad path provided!")
-        .read()
-        .expect("ERROR: Failed to read file!");
+use xmp_toolkit;
+use xmp_toolkit::XmpFile;
+fn adobe_xmp_reapd() {
+    let mut xmp_file = xmp_toolkit::XmpFile::new().unwrap();
 
-    let tag = match tagged_file.primary_tag() {
-        Some(primary_tag) => primary_tag,
-        // If the "primary" tag doesn't exist, we just grab the
-        // first tag we can find. Realistically, a tag reader would likely
-        // iterate through the tags to find a suitable one.
-        None => tagged_file.first_tag().expect("ERROR: No tags found!"),
-    };
-
-    println!("Artist: {}", tag.artist().as_deref().unwrap_or("None"));
-    // import keys from https://docs.rs/lofty/latest/lofty/enum.ItemKey.html
+    let path_str = std::env::args().nth(1).expect("ERROR: No path specified!");
+    let path = Path::new(&path_str);
+    let t = xmp_file
+        .open_file(path, xmp_toolkit::OpenFileOptions::default())
+        .unwrap();
 }
