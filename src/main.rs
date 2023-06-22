@@ -2,11 +2,12 @@ mod splice_writer;
 mod tag_writer;
 mod xmp_read;
 // splice_writer::write_tags_from_db();
-//tag_writer::tag_writer();
 use anyhow::Context;
 
 fn main() {
     //tag_reader::tag_reader();
+    //ixml_read::ixml_reader();
+    //tag_writer::tag_writer();
 
     if let Err(err) = xmp_read::xmp_read().context("could not read XMP from file") {
         eprintln!("Error: {:?}", err);
@@ -14,4 +15,5 @@ fn main() {
     }
 }
 
+mod ixml_read;
 mod tag_reader;

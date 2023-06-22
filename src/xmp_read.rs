@@ -61,7 +61,11 @@ pub(crate) fn xmp_read() -> Result<()> {
             &XmpValue::new("33".to_string()),
         ) {
             Ok(_) => println!("PRINTED TO TEMPO!"),
-            Err(_) => println!("could write new value to tempo"),
+            Err(_) => println!("could not write new value to tempo"),
+        };
+        match xmp.set_property_bool(xmp_dm_uri.as_str(), "loop", &XmpValue::new(true)) {
+            Ok(_) => println!("PRINTED TO boolean LOOP!"),
+            Err(_) => println!("could not write new value to loop"),
         };
         f.put_xmp(&xmp).unwrap();
         f.close();

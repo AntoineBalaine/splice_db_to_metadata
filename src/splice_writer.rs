@@ -34,9 +34,9 @@ JOIN packs AS p ON s.pack_uuid = p.uuid;";
         // import type of statement
         let key = read_tag("key");
         let bpm = read_tag("bpm");
-        let chord_type = read_tag("chord_type");
+        let chord_type = read_tag("chord_type"); // included in xmpDM as scaleType
         let tags = read_tag("tags");
-        let sample_type = read_tag("sample_type");
+        let sample_type = read_tag("sample_type"); // loop/one-shot
         let album_name = read_tag("album_name");
         let sample_genre = read_tag("sample_genre");
         let genre = read_tag("genre");
@@ -53,11 +53,7 @@ JOIN packs AS p ON s.pack_uuid = p.uuid;";
         tag.insert("tempo".to_string(), bpm);
         tag.insert("chord_type".to_string(), chord_type);
         tag.insert("description".to_string(), tags);
-        let raw_sample_type = format!(
-            r"<BWFXML><USER><loop>{}</loop></USER></BWFXML>",
-            sample_type
-        );
-        tag.insert(("type".to_string()), sample_type);
+        tag.insert("type".to_string(), sample_type);
         tag.set_artist(artist);
         tag.set_album(album_name);
         tag.set_genre(match sample_genre {
