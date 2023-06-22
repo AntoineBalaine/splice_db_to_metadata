@@ -16,7 +16,7 @@ FROM samples AS s
 JOIN packs AS p ON s.pack_uuid = p.uuid;";
 
     let mut statement = connection.prepare(query).unwrap();
-    statement.bind((1, 50)).unwrap();
+    /*     statement.bind((1, 10892)).unwrap(); */
 
     while let Ok(State::Row) = statement.next() {
         let read_tag = |tag: &str| match statement.read::<String, _>(tag) {
@@ -60,7 +60,7 @@ JOIN packs AS p ON s.pack_uuid = p.uuid;";
             // Retrieve the XMP from the file.
             let mut xmp = match f
                 .xmp()
-                .ok_or_else(|| anyhow!("unable to process XMP in file {}", path))
+                .ok_or_else(|| anyhow!("no xmp currently in file {}", path))
             {
                 Ok(xmp) => xmp,
                 Err(err) => {
