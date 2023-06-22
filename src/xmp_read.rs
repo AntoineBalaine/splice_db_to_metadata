@@ -1,7 +1,7 @@
 use std::env;
 
 use anyhow::{anyhow, Context, Result};
-use xmp_toolkit::{xmp_ns, OpenFileOptions, XmpFile, XmpMeta};
+use xmp_toolkit::{OpenFileOptions, XmpFile, XmpMeta, XmpValue};
 
 pub(crate) fn xmp_read() -> Result<()> {
     // Parse command-line arguments. There should be only one
@@ -22,7 +22,10 @@ pub(crate) fn xmp_read() -> Result<()> {
 
     f.open_file(
         path,
-        OpenFileOptions::default().only_xmp().use_smart_handler(),
+        OpenFileOptions::default()
+            .for_update()
+            .only_xmp()
+            .use_smart_handler(),
     )
     .or_else(|_err| {
         // There might not be an appropriate handler available.
@@ -37,49 +40,9 @@ pub(crate) fn xmp_read() -> Result<()> {
     .with_context(|| format!("could not find XMP in file {}", path))?;
 
     // Retrieve the XMP from the file.
-    let xmp = f
+    let mut xmp = f
         .xmp()
         .ok_or_else(|| anyhow!("unable to process XMP in file {}", path))?;
-
-    // Add the code to display the simple property "CreatorTool" by providing
-    // the namespace URI and the name of the property.
-    if let Some(creator_tool) = xmp.property(xmp_ns::XMP, "CreatorTool") {
-        println!("CreatorTool = {}", creator_tool.value);
-    }
-
-    // Display the first element of the `creator` array.
-    if let Some(first_creator) = xmp.property_array(xmp_ns::DC, "creator").next() {
-        println!("dc:creator = {}", first_creator.value);
-    } else {
-        println!("No creator found");
-    }
-
-    // Display all elements in the `subject` property (which is an array).
-    // Note that the C++ XMP Toolkit's indices are 1-based. This example's output
-    // instead follows Rust's convention of being 0-based.
-    for (index, v) in xmp.property_array(xmp_ns::DC, "subject").enumerate() {
-        println!("dc::subject[{}] = {}", index, v.value);
-    }
-
-    // Get a localized text item; display the `title` property in English.
-    if let Some((value, _actual_lang)) =
-        xmp.localized_text(xmp_ns::DC, "title", Some("en"), "en-US")
-    {
-        println!("dc:title in English = {}", value.value);
-    }
-
-    // Get a localized text item; display the `title` property in French.
-    if let Some((value, _actual_lang)) =
-        xmp.localized_text(xmp_ns::DC, "title", Some("fr"), "fr-FR")
-    {
-        println!("dc:title in French = {}", value.value);
-    }
-
-    // Get a date property; read the `MetadataDate` property if it exists. If so,
-    // convert the `XmpDateTime` into a string and display it.
-    if let Some(value) = xmp.property_date(xmp_ns::XMP, "MetadataDate") {
-        println!("meta:MetadataDate = {}", value.value);
-    }
 
     let xmp_dm_uri = "http://ns.adobe.com/xmp/1.0/DynamicMedia/".to_string();
     let xmp_dm = XmpMeta::register_namespace(xmp_dm_uri.as_str(), "xmpDM")?;
@@ -91,16 +54,19 @@ pub(crate) fn xmp_read() -> Result<()> {
     } else {
         println!("could not find {}{}", xmp_dm, "tempo");
     }
-    if xmp.contains_struct_field(xmp_dm.as_str(), "Tempo", xmp_dm.as_str(), "Tempo") {}
-    // Discover if the Exif Flash structure is available. If so, display the
-    // flash status at the time the photograph was taken.
-    if xmp.contains_struct_field(xmp_ns::EXIF, "Flash", xmp_ns::EXIF, "Fired") {
-        let path = XmpMeta::compose_struct_field_path(xmp_ns::EXIF, "Flash", xmp_ns::EXIF, "Fired")
-            .unwrap();
-
-        if let Some(value) = xmp.property_bool(xmp_ns::EXIF, &path) {
-            println!("Flash Used = {}", value.value);
-        }
+    if f.can_put_xmp(&xmp) {
+        match xmp.set_property(
+            xmp_dm_uri.as_str(),
+            "tempo",
+            &XmpValue::new("33".to_string()),
+        ) {
+            Ok(_) => println!("PRINTED TO TEMPO!"),
+            Err(_) => println!("could write new value to tempo"),
+        };
+        f.put_xmp(&xmp).unwrap();
+        f.close();
+    } else {
+        println!("can't update file");
     }
 
     Ok(())
