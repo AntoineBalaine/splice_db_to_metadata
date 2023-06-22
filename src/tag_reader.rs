@@ -52,15 +52,3 @@ pub(crate) fn read_file() -> Result<File, io::Error> {
     }
     File::open(path)
 }
-
-use xmp_toolkit;
-use xmp_toolkit::XmpFile;
-fn adobe_xmp_reapd() {
-    let mut xmp_file = xmp_toolkit::XmpFile::new().unwrap();
-
-    let path_str = std::env::args().nth(1).expect("ERROR: No path specified!");
-    let path = Path::new(&path_str);
-    let t = xmp_file
-        .open_file(path, xmp_toolkit::OpenFileOptions::default())
-        .unwrap();
-}

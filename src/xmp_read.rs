@@ -40,9 +40,16 @@ pub(crate) fn xmp_read() -> Result<()> {
     .with_context(|| format!("could not find XMP in file {}", path))?;
 
     // Retrieve the XMP from the file.
-    let mut xmp = f
+    let mut xmp = match f
         .xmp()
-        .ok_or_else(|| anyhow!("unable to process XMP in file {}", path))?;
+        .ok_or_else(|| anyhow!("unable to process XMP in file {}", path))
+    {
+        Ok(xmp) => xmp,
+        Err(err) => {
+            eprintln!("Error: {:?}", err);
+            XmpMeta::new().unwrap()
+        }
+    };
 
     let xmp_dm_uri = "http://ns.adobe.com/xmp/1.0/DynamicMedia/".to_string();
     let xmp_dm = XmpMeta::register_namespace(xmp_dm_uri.as_str(), "xmpDM")?;
