@@ -8,6 +8,10 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.71"
 lofty = "0.14.0"
+oggvorbismeta = "0.1.0"
+riff-io = "0.1.2"
+rmp-serde = "1.1.1"
+serde = { version =  "1.0.164", features = ["derive"] }
 sqlite = "0.31.0"
 structopt = "0.3.26"
 xmp_toolkit = "1.4.0"
