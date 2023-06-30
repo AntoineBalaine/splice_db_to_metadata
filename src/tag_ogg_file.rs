@@ -9,11 +9,11 @@ use std::io::Cursor;
 
 pub fn tag_file() {
     let file_in = env::args().nth(1).expect("Please specify an input file.");
-    let file_out = env::args().nth(2).expect("Please specify an output file.");
-    println!("Opening files: {}, {}", file_in, file_out);
+    // let file_out = env::args().nth(2).expect("Please specify an output file.");
+    // println!("Opening files: {}, {}", file_in, file_out);
 
     //open files
-    let mut f_in_disk = File::open(file_in).expect("Can't open file");
+    let mut f_in_disk = File::open(&file_in).expect("Can't open file");
     let mut f_in_ram: Vec<u8> = vec![];
 
     println!("Copy input file to buffer");
@@ -51,9 +51,10 @@ pub fn tag_file() {
     }
 
     println!("Insert new comments");
-    let mut f_out = replace_comment_header(f_in, new_comment);
+    let f_out = replace_comment_header(f_in, new_comment);
 
     println!("Save to disk");
-    let mut f_out_disk = File::create(file_out).unwrap();
-    std::io::copy(&mut f_out, &mut f_out_disk).unwrap();
+    std::fs::write(file_in, f_out.into_inner()).unwrap();
+    /*     let mut f_out_disk = File::create(file_out).unwrap();
+    std::io::copy(&mut f_out, &mut f_out_disk).unwrap(); */
 }

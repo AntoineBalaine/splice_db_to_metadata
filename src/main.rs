@@ -1,4 +1,4 @@
-// mod read_nksf;
+mod read_nksf;
 mod splice_writer;
 mod tag_ogg_file;
 mod tag_writer;
@@ -15,7 +15,8 @@ fn main() {
     /*     if let Err(err) = splice_writer::write_tags_from_db() {
         eprintln!("Error: {:?}", err);
     } */
-    tag_ogg_file::tag_file();
+    // tag_ogg_file::tag_file();
+    read_nksf::read_presets_from_dir()
 }
 
 mod tag_reader;

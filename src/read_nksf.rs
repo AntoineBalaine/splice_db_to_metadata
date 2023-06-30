@@ -1,4 +1,8 @@
-use std::path::Path;
+use std::{
+    env,
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 use riff_io::{ChunkMeta, Entry, RiffFile};
 pub struct NksFile {
@@ -78,10 +82,31 @@ pub struct Destination {
     pub path: PathBuf,
 }
 
-fn load_nks_preset(
-    path: &Path,
-    destination: &Destination,
-) -> Result<LoadPresetOutcome, Box<dyn Error>> {
+fn load_nks_preset(path: &Path /* , destination: &Destination */) -> Result<(), &'static str> {
     let nks_file = NksFile::load(path)?;
-    let mut nks_content = nks_file.content()?;
+    let nks_content = nks_file.content()?;
+    let metadata = nks_content.metadata;
+    // print all contents of metadata
+    println!("{:#?}", metadata);
+    Ok(())
+}
+
+pub fn read_presets_from_dir() {
+    let dir_in = env::args().nth(1).expect("Please specify an input file.");
+    let path = Path::new(dir_in.as_str());
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+                if let Some(extension) = path.extension() {
+                    if extension == "nksf" {
+                        load_nks_preset(&path);
+                    }
+                }
+            }
+        }
+    } else {
+        println!("Couldn't read directory");
+    }
+    ()
 }
